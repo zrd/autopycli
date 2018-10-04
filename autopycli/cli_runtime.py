@@ -1,5 +1,4 @@
 import autopycli.arguments as cliargs
-#from autopycli import ArgumentParser
 from autopycli import ArgumentsError
 from autopycli import Configuration
 from autopycli import Environment
