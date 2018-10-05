@@ -2,6 +2,7 @@ import autopycli.arguments as cliargs
 from autopycli import ArgumentsError
 from autopycli import Configuration
 from autopycli import Environment
+import inspect
 
 
 class RuntimeConfig:
@@ -15,10 +16,17 @@ class RuntimeConfig:
 
 class CliRuntime:
     def __init__(self, *args, **kwargs):
-        self.arg_parser = cliargs.ArgumentParser(*args, **kwargs)
+        parser_class = cliargs.ArgumentParser
+        parser_kwargs = self.filter_parser_args(parser_class, kwargs)
+        self.arg_parser = parser_class(*args, **parser_kwargs)
         self.runtime_config = RuntimeConfig()
         self.required_args = []
         self.error_messages = []
+        self.config_path = kwargs.get("config_path")
+
+    def filter_parser_args(self, parser, kwargs):
+        arg_spec = inspect.getargspec(parser.__init__)
+        return {k: kwargs[k] for k in kwargs if k in arg_spec.args[1:]}
 
     def add_argument(self, *args, **kwargs):
         if kwargs.get("required"):
