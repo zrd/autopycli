@@ -10,6 +10,13 @@ ARG_PARSER = cliargs.ArgumentParser
 
 
 class RuntimeConfig:
+    """Carry the application's config.
+
+    RuntimeConfig should only be instantiated as a member of a
+    CliRuntime instance. This happens automatically when CliRuntime is
+    instantiated. The RuntimeConfig's __dict__ is modified via
+    CliRuntime methods, so no special constructor is necessary.
+    """
     def __repr__(self):
         return "RuntimeConfig({})".format(str(self.__dict__))
 
@@ -19,6 +26,18 @@ class RuntimeConfig:
 
 
 class CliRuntime:
+    """Load available config channels into a RuntimeConfig.
+
+    A "config channel" is any viable route to bind a configuration
+    value to a key name, such as command line arguments, config file
+    options, and environment variables. As of now these include the
+    most obvious standard library packages argparse, configparser, and
+    os. In the future they could include Click based interfaces; YAML,
+    XML, or JSON config files; etc.
+
+    Order of precedence should be::
+        Command Line > Config File(s) > Environment
+    """
     def __init__(self, *args, **kwargs):
         self.runtime_config = RuntimeConfig()
         self.required_args = []
