@@ -111,13 +111,11 @@ class CliRuntime:
                         self.load_config_file(file_path)
             elif os.path.isfile(self.config_path):
                 self.load_config_file(self.config_path)
-        else:
-            pass
 
     def parse_args(self):
         try:
             self.arg_parser.parse_args(namespace=self.runtime_config)
         except ArgumentsError as exc:
-            self.error_messages.append(str(exc))
+            self.error_messages.append("{}: {}".format(self.arg_parser.__class__.__name__, str(exc)))
 
         self.load_configs()
