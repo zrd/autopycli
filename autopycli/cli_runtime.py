@@ -38,10 +38,41 @@ class CliRuntime:
         return {k: kwargs[k] for k in kwargs if k in arg_spec.args[1:]}
 
     def add_argument(self, *args, **kwargs):
-        if kwargs.get("required"):
-            # TODO: Decide which is more correct
-            #self.required_args.append(kwargs["dest"])
-            self.required_args.append(kwargs.get("dest"))
+        """Preprocess arguments passed to the arg parser.
+
+        First, determine which of the provided args and kwargs are
+        required. If not found in the commandline arguments, they will
+        be expected from config files or environment variables.
+
+        Then, call the arg parser's add_argument() method with the
+        provided arguments.
+        """
+        if len(args) > 0:
+            # A name or flags are provided.
+            if not args[0].startswith("-"):
+                # Name: bare positional.
+                try:
+                    self.required_args.append(kwargs["dest"])
+                except KeyError:
+                    self.required_args.append(args[0])
+            elif kwargs.get("required") is True:
+                # Flag(s): Normally optional, but have a "required" parameter.
+                initial_num_required = len(self.required_args)
+                try:
+                    self.required_args.append(kwargs["dest"])
+                except KeyError:
+                    for arg in args:
+                        if arg.startswith("--"):
+                            # Long argument name. Ignore any long names after the first.
+                            self.required_args.append(arg.lstrip("--"))
+                            break
+
+                if len(self.required_args) == initial_num_required:
+                    # Short argument name.
+                    self.required_args.append(args[0].lstrip("-"))
+        elif kwargs.get("dest"):
+            # No name or flags are provided, but "dest" is.
+            self.required_args.append(kwargs["dest"])
 
         self.arg_parser.add_argument(*args, **kwargs)
 
