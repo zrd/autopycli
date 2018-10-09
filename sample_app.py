@@ -3,7 +3,6 @@ import pprint
 from autopycli import CliRuntime
 from autopycli import logger
 
-CONFIG_PATH = os.path.join(os.getcwd(), "sample.conf")
 PP = pprint.PrettyPrinter()
 
 
