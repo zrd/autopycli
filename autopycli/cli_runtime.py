@@ -1,3 +1,4 @@
+import configparser
 import inspect
 import os
 
@@ -95,8 +96,23 @@ class CliRuntime:
 
         self.arg_parser.add_argument(*args, **kwargs)
 
+    def load_config_file(self, filepath):
+        parser = configparser.ConfigParser()
+        parser.read(filepath)
+        for section in parser:
+            self.runtime_config.__dict__.update(parser[section])
+
     def load_configs(self):
-        return
+        if self.config_path:
+            if os.path.isdir(self.config_path):
+                print(os.walk(self.config_path))
+                for dirpath, _, filenames in  os.walk(self.config_path):
+                    for file_path in [os.path.join(dirpath, f) for f in filenames]:
+                        self.load_config_file(file_path)
+            elif os.path.isfile(self.config_path):
+                self.load_config_file(self.config_path)
+        else:
+            pass
 
     def parse_args(self):
         try:
