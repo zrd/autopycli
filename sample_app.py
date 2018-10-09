@@ -8,7 +8,7 @@ PP = pprint.PrettyPrinter()
 
 
 def main():
-    app_config = CliRuntime(description="Some CLI app", config_path="/some/path/to/config")
+    app_config = CliRuntime(description="Some CLI app", config_path=os.path.join(os.getcwd(), "config_dir"))
     app_config.add_argument(dest="required", help="A required positional")
     app_config.add_argument("positional", nargs="+", help="A list of required positional arguments")
     app_config.add_argument("--malformed", "--supermalformed", help="A malformed argument", required=True)
