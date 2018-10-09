@@ -1,2 +1,3 @@
 # autopycli
-An extensible, POSIX-compliant, GNU-esque CLI framework for Python 3
+Bootstrap Python CLI applications with an eye (or eyes) toward
+extensibility, POSIX compliance, and GNU-esque behavior.
