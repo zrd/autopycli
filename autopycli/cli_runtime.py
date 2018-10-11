@@ -13,10 +13,8 @@ ARG_PARSER = cliargs.ArgumentParser
 class RuntimeConfig:
     """Carry the application's config.
 
-    RuntimeConfig should only be instantiated as a member of a
-    CliRuntime instance. This happens automatically when CliRuntime is
-    instantiated. The RuntimeConfig's __dict__ is modified via
-    CliRuntime methods, so no special constructor is necessary.
+    RuntimeConfig should only be a member of a CliRuntime instance. No
+    special constructor behavior is needed here.
     """
     def __repr__(self):
         return "RuntimeConfig({})".format(str(self.__dict__))
@@ -100,16 +98,22 @@ class CliRuntime:
         parser = configparser.ConfigParser()
         parser.read(filepath)
         for section in parser:
-            self.config.__dict__.update(parser[section])
+            self.config.__dict__.update({k: parser[section][k]
+                                         for k in parser[section]
+                                         if not self.config.__dict__.get(k)})
 
     def load_configs(self, config_extns=(".ini", ".cfg", ".conf", ".config")):
+        """Load config file(s)
+
+        If config_path is a directory, load all config files in the
+        directory in some (unknowable) order. If a file, load the file
+        if it's a recognizable config file.
+        """
         if self.config_path:
             if os.path.isdir(self.config_path):
-                print(os.walk(self.config_path))
-                for dirpath, _, filenames in  os.walk(self.config_path):
-                    for file_path in [os.path.join(dirpath, f) for f in filenames]:
-                        if file_path.endswith(config_extns):
-                            self.load_config_file(file_path)
+                for dirpath, _, filenames in os.walk(self.config_path):
+                    for file_path in [os.path.join(dirpath, f) for f in filenames if f.endswith(config_extns)]:
+                        self.load_config_file(file_path)
             elif os.path.isfile(self.config_path) and self.config_path.endswith(config_extns):
                 self.load_config_file(self.config_path)
 
@@ -117,6 +121,6 @@ class CliRuntime:
         try:
             self.arg_parser.parse_args(namespace=self.config)
         except ArgumentsError as exc:
-            self.error_messages.append("{}: {}".format(self.arg_parser.__class__.__name__, str(exc)))
+            self.error_messages.append((self.arg_parser.__class__, str(exc)))
 
         self.load_configs()
