@@ -40,7 +40,7 @@ class CliRuntime:
         Command Line > Config File(s) > Environment
     """
     def __init__(self, *args, **kwargs):
-        self.runtime_config = RuntimeConfig()
+        self.config = RuntimeConfig()
         self.required_args = []
         self.error_messages = []
         self.config_path = kwargs.get("config_path")
@@ -100,7 +100,7 @@ class CliRuntime:
         parser = configparser.ConfigParser()
         parser.read(filepath)
         for section in parser:
-            self.runtime_config.__dict__.update(parser[section])
+            self.config.__dict__.update(parser[section])
 
     def load_configs(self):
         if self.config_path:
@@ -114,7 +114,7 @@ class CliRuntime:
 
     def parse_args(self):
         try:
-            self.arg_parser.parse_args(namespace=self.runtime_config)
+            self.arg_parser.parse_args(namespace=self.config)
         except ArgumentsError as exc:
             self.error_messages.append("{}: {}".format(self.arg_parser.__class__.__name__, str(exc)))
 
