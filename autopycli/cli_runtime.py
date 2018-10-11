@@ -102,14 +102,15 @@ class CliRuntime:
         for section in parser:
             self.config.__dict__.update(parser[section])
 
-    def load_configs(self):
+    def load_configs(self, config_extns=(".ini", ".cfg", ".conf", ".config")):
         if self.config_path:
             if os.path.isdir(self.config_path):
                 print(os.walk(self.config_path))
                 for dirpath, _, filenames in  os.walk(self.config_path):
                     for file_path in [os.path.join(dirpath, f) for f in filenames]:
-                        self.load_config_file(file_path)
-            elif os.path.isfile(self.config_path):
+                        if file_path.endswith(config_extns):
+                            self.load_config_file(file_path)
+            elif os.path.isfile(self.config_path) and self.config_path.endswith(config_extns):
                 self.load_config_file(self.config_path)
 
     def parse_args(self):
