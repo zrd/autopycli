@@ -7,16 +7,17 @@ PP = pprint.PrettyPrinter()
 
 
 def main():
-    runtime = CliRuntime(description="Some CLI app", config_path=os.path.join(os.getcwd(), "config_dir"))
+    runtime = CliRuntime(description="Some CLI app", config_path=os.path.join(os.getcwd(), "app_config"))
     runtime.add_argument(dest="required", help="A required positional")
     runtime.add_argument("positional", nargs="+", help="A list of required positional arguments")
     runtime.add_argument("--malformed", "--supermalformed", help="A malformed argument", required=True)
-    runtime.add_argument("-s", "--sample_var", required=True, help="A required argument")
-    runtime.add_argument("-o", "--optional_var", dest="optional_var", help="An optional argument")
-    runtime.add_argument("-c", "--config_var", dest="config_var", required=True, help="A configurable option")
-    runtime.add_argument("-e", "--env_var", dest="env_var", help="An environment variable")
+    runtime.add_argument("-o", "--optional", dest="optional_var", help="An optional argument")
+    runtime.add_argument("-c", "--config", dest="config_var", required=True, help="A configurable option")
+    runtime.add_argument("-e", "--env", dest="env_var", help="An environment variable")
     runtime.add_argument("-d", "--default_var", dest="default_var", default="somedefault",
                          help="An argument with a default")
+    runtime.add_argument("-u", "--user_configs", nargs="+", dest="some_bizarre_name",
+                         config=True, help="One or more paths to user-specified config files or dirs")
     runtime.parse_args()
     PP.pprint(vars(runtime))
     PP.pprint(vars(runtime.arg_parser))
