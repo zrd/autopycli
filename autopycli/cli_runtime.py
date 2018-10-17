@@ -28,10 +28,10 @@ class RuntimeConfig:
         return "{{{}}}".format(", ".join(members))
 
     def add_option(self, section, kvpair):
-        """Add a key-value pair to the specified config section.
+        """Add one or more key-value pairs to the specified section.
 
         The name of the section is analogous to the section of an
-        ini-style config file. In the current implementation, each
+        INI-style config file. In the current implementation, each
         unique section in the config file(s) will constitute a
         RuntimeConfig section, as will the command line arguments
         ("args") and the OS environment ("environ").
