@@ -61,12 +61,12 @@ class CliRuntime:
     """
     def __init__(self, *args, **kwargs):
         self.config = RuntimeConfig()
+        self.config.add_option("environ", os.environ)
         self.required_args = []
         self.errors = []
         self.config_args = None
         self.config_path = self.get_config_path(kwargs)
         self.config_extns = kwargs.get("config_extns") or (".ini", ".cfg", ".conf", ".config")
-        self.env_vars = os.environ
         parser_kwargs = self.filter_parser_args(ARG_PARSER, kwargs)
         self._arg_parser = ARG_PARSER(*args, **parser_kwargs)
 
