@@ -100,7 +100,8 @@ class CliRuntime:
         directories.
 
         Finally, call the arg parser's add_argument() method with the
-        provided arguments.
+        provided arguments (minus any arguments that add_argument()
+        doesn't expect).
         """
         if len(args) > 0:
             # A name or flags are provided.
@@ -111,27 +112,27 @@ class CliRuntime:
                 except KeyError:
                     self.required_args.append(args[0])
             elif kwargs.get("required") is True:
-                # Flag(s): Normally optional, but have a "required" parameter.
+                # Flag(s): Normally optional, but here the "required" parameter is True.
                 initial_num_required = len(self.required_args)
                 try:
                     self.required_args.append(kwargs["dest"])
                 except KeyError:
                     for arg in args:
                         if arg.startswith("--"):
-                            # Long argument name.
+                            # Long flag.
                             self.required_args.append(arg.lstrip("--"))
-                            # Ignore any long names after the first.
+                            # Ignore any long flags after the first.
                             break
 
-                if len(self.required_args) == initial_num_required:
-                    # Short argument name.
+                if initial_num_required == len(self.required_args):
+                    # No long flags were found, so this must be a short flag.
                     self.required_args.append(args[0].lstrip("-"))
-        elif kwargs.get("dest"):
-            # No name or flags are provided, but "dest" is.
+        elif kwargs.get("dest") and kwargs.get("required") is True:
+            # No positional args are provided, but "dest" is.
             self.required_args.append(kwargs["dest"])
 
-        # The value of this argument is one or more paths to config files or dirs.
         if kwargs.get("config") is True:
+            # Flag signals the argument represents one or more config paths.
             self.config_args = kwargs.get("dest") or args
             # Don't pass it to the arg parser's add_argument method.
             del kwargs["config"]
