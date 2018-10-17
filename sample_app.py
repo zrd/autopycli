@@ -20,10 +20,9 @@ def main():
                          config=True, help="One or more paths to user-specified config files or dirs")
     runtime.parse_args()
     PP.pprint(vars(runtime))
-    PP.pprint(vars(runtime.arg_parser))
     logger.debug("Runtime config: {}".format(runtime.config))
     logger.debug("Required args: {}".format(runtime.required_args))
-    logger.debug("Error messages: {}".format(runtime.error_messages))
+    logger.debug("Errors: {}".format(runtime.errors))
 
 
 if __name__ == "__main__":

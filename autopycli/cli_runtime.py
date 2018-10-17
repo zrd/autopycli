@@ -10,6 +10,10 @@ from autopycli import Environment
 ARG_PARSER = cliargs.ArgumentParser
 
 
+class ArgparserNamespace:
+    pass
+
+
 class RuntimeConfig:
     """Carry the application's config.
 
@@ -23,6 +27,24 @@ class RuntimeConfig:
         members = ["{}: {}".format(k, str(self.__dict__[k])) for k in self.__dict__]
         return "{{{}}}".format(", ".join(members))
 
+    def add_option(self, section, kvpair):
+        """Add a key-value pair to the specified config section.
+
+        The name of the section is analogous to the section of an
+        ini-style config file. In the current implementation, each
+        unique section in the config file(s) will constitute a
+        RuntimeConfig section, as will the command line arguments
+        ("args") and the OS environment ("environ").
+
+        `kvpair` must be a valid argument to the section dictionary's
+        `update` method.
+        """
+        try:
+            self.__dict__[section].update(kvpair)
+        except KeyError:
+            self.__dict__[section] = {}
+            self.__dict__[section].update(kvpair)
+
 
 class CliRuntime:
     """Load available config channels into a RuntimeConfig.
@@ -30,9 +52,9 @@ class CliRuntime:
     A "config channel" is any viable route to bind a configuration
     value to a key name, such as command line arguments, config file
     options, and environment variables. As of now these include the
-    most obvious standard library packages argparse, configparser, and
-    os. In the future they could include Click based interfaces; YAML,
-    XML, or JSON config files; etc.
+    obvious standard library packages argparse, configparser, and os.
+    In the future they could include Click based interfaces; YAML, XML,
+    or JSON config files; etc.
 
     Order of precedence should be::
         Command Line > Config File(s) > Environment
@@ -40,13 +62,13 @@ class CliRuntime:
     def __init__(self, *args, **kwargs):
         self.config = RuntimeConfig()
         self.required_args = []
-        self.error_messages = []
+        self.errors = []
         self.config_args = None
         self.config_path = self.get_config_path(kwargs)
         self.config_extns = kwargs.get("config_extns") or (".ini", ".cfg", ".conf", ".config")
         self.env_vars = os.environ
         parser_kwargs = self.filter_parser_args(ARG_PARSER, kwargs)
-        self.arg_parser = ARG_PARSER(*args, **parser_kwargs)
+        self._arg_parser = ARG_PARSER(*args, **parser_kwargs)
 
     def get_config_path(self, kwargs):
         config_path = kwargs.get("config_path")
@@ -96,8 +118,9 @@ class CliRuntime:
                 except KeyError:
                     for arg in args:
                         if arg.startswith("--"):
-                            # Long argument name. Ignore any long names after the first.
+                            # Long argument name.
                             self.required_args.append(arg.lstrip("--"))
+                            # Ignore any long names after the first.
                             break
 
                 if len(self.required_args) == initial_num_required:
@@ -113,15 +136,13 @@ class CliRuntime:
             # Don't pass it to the arg parser's add_argument method.
             del kwargs["config"]
 
-        self.arg_parser.add_argument(*args, **kwargs)
+        self._arg_parser.add_argument(*args, **kwargs)
 
     def load_config_file(self, filepath):
         parser = configparser.ConfigParser()
         parser.read(filepath)
         for section in parser:
-            self.config.__dict__.update({k: parser[section][k]
-                                         for k in parser[section]
-                                         if not self.config.__dict__.get(k)})
+            self.config.add_option(section, parser[section])
 
     def load_config_path(self, path):
         if os.path.isdir(path):
@@ -129,7 +150,7 @@ class CliRuntime:
                 for file_path in [os.path.join(dirpath, f) for f in filenames if
                                   f.endswith(self.config_extns)]:
                     self.load_config_file(file_path)
-        elif os.path.isfile(path) and path.endswith(self.config_extns):
+        elif os.path.isfile(path):
             self.load_config_file(path)
 
     def load_configs(self):
@@ -152,9 +173,11 @@ class CliRuntime:
             self.load_config_path(path)
 
     def parse_args(self):
+        ns = ArgparserNamespace()
         try:
-            self.arg_parser.parse_args(namespace=self.config)
+            self._arg_parser.parse_args(namespace=ns)
         except ArgumentsError as exc:
-            self.error_messages.append((self.arg_parser.__class__, str(exc)))
+            self.errors.append(exc)
 
+        self.config.add_option("args", ns.__dict__)
         self.load_configs()
