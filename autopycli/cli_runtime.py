@@ -92,8 +92,7 @@ class CliRuntime:
         """Preprocess an argument to be added to the arg parser.
 
         First, determine which of the provided args and kwargs are
-        required. If not found in the commandline arguments, they will
-        be expected from config files or environment variables.
+        required.
 
         Then, check if the kwarg "config" is True. If so, the value of
         this argument signifies one or more paths to config files or
@@ -132,7 +131,7 @@ class CliRuntime:
             self.required_args.append(kwargs["dest"])
 
         if kwargs.get("config") is True:
-            # Flag signals the argument represents one or more config paths.
+            # This argument signifies config path(s).
             self.config_args = kwargs.get("dest") or args
             # Don't pass it to the arg parser's add_argument method.
             del kwargs["config"]
@@ -142,14 +141,14 @@ class CliRuntime:
     def load_config_file(self, filepath):
         parser = configparser.ConfigParser()
         parser.read(filepath)
+        print("{}: {{DEFAULT: {}}}".format(filepath, repr(parser["DEFAULT"])))
         for section in parser:
             self.config.add_option(section, parser[section])
 
     def load_config_path(self, path):
         if os.path.isdir(path):
             for dirpath, _, filenames in os.walk(path):
-                for file_path in [os.path.join(dirpath, f) for f in filenames if
-                                  f.endswith(self.config_extns)]:
+                for file_path in [os.path.join(dirpath, f) for f in filenames if f.endswith(self.config_extns)]:
                     self.load_config_file(file_path)
         elif os.path.isfile(path):
             self.load_config_file(path)
