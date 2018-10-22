@@ -141,7 +141,6 @@ class CliRuntime:
     def load_config_file(self, filepath):
         parser = configparser.ConfigParser()
         parser.read(filepath)
-        print("{}: {{DEFAULT: {}}}".format(filepath, repr(parser["DEFAULT"])))
         for section in parser:
             self.config.add_option(section, parser[section])
 
